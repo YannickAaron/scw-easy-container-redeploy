@@ -49,7 +49,7 @@ runs:
           request_url = "https://api.scaleway.com/${{ inputs.api_version }}/regions/${{ inputs.region }}/containers"
         fi
 
-        containers = $(curl -s -X GET -H "X-Auth-Token: ${{ inputs.api_secret_key }}" $request_url)
+        containers = $(curl -s -X GET -H "X-Auth-Token: ${{ inputs.api_secret_key }}" "$request_url")
 
         container_id = $(echo $containers | jq -r '.containers[] | select(.name == "${{ inputs.container_name }}") | .id')
         container_image = $(echo $containers | jq -r '.containers[] | select(.name == "${{ inputs.container_name }}") | .registry_image')
