@@ -1,0 +1,67 @@
+name: SCW - Easy Container Redployment
+description: Allows you to easy deploy a container on scaleway after you updated the image using only the name of the container
+author: Yannick Aaron Lehr
+branding:
+  icon: 'server'
+  color: 'green'
+inputs:
+  organization_id:
+    description: |
+      The organization id of the container you want to redeploy
+    required: false
+  project_id:
+    description: |
+      The project id of the container you want to redeploy
+    required: false
+  api_version: 
+    description: |
+      The api version of the container you want to redeploy
+    required: false
+    default: 'v1beta1'
+  region:
+    description: |
+      The region to use for the api calls
+    required: true
+    default: 'fr-par'
+  container_name:
+    description: |
+      The name of the container you want to redeploy
+    required: true
+  api_secret_key:
+    description: |
+      The api secret key to use for the api calls
+    required: true
+#redeploy the container
+runs:
+  using: "composite"
+  steps:
+    - name: getting the information of all containers
+      shell: bash
+      #save all containers in a variable using the api and use organization_id, project_id if set as get parameters
+      runs:
+        run: |
+          if [ -z "${{ inputs.organization_id }}" ]; then
+            request_url = "https://api.scaleway.com/${{ inputs.api_version }}/regions/${{ inputs.region }}/containers?organization_id=${{ inputs.organization_id }}"
+          elif [ -z "${{ inputs.project_id }}" ]; then
+            request_url = "https://api.scaleway.com/${{ inputs.api_version }}/regions/${{ inputs.region }}/containers?project_id=${{ inputs.project_id }}"
+          elif [ -z "${{ inputs.organization_id }}" ] && [ -z "${{ inputs.project_id }}" ]; then
+            request_url = "https://api.scaleway.com/${{ inputs.api_version }}/regions/${{ inputs.region }}/containers?project_id=${{ inputs.project_id }}&organization_id=${{ inputs.organization_id }}"
+          else
+            request_url = "https://api.scaleway.com/${{ inputs.api_version }}/regions/${{ inputs.region }}/containers"
+          fi
+
+          containers = $(curl -s -X GET -H "X-Auth-Token: ${{ inputs.api_secret_key }}" $request_url)
+
+          container_id = $(echo $containers | jq -r '.containers[] | select(.name == "${{ inputs.container_name }}") | .id')
+          container_image = $(echo $containers | jq -r '.containers[] | select(.name == "${{ inputs.container_name }}") | .registry_image')
+          container_region = $(echo $containers | jq -r '.containers[] | select(.name == "${{ inputs.container_name }}") | .region')
+
+          echo "::set-env name=container_id::$container_id"
+    - name: redeploying the container
+      shell: bash
+      run: >
+        curl \
+          --request POST \
+          --header "X-Auth-Token:${{ inputs.api_secret_key }}" \
+          --data '{}' \
+          https://api.scaleway.com/containers/${{ inputs.api_version }}/regions/${{ inputs.region }}/containers/${{ env.container_id }}/deploy
