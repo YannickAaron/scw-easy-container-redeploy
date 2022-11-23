@@ -1,7 +1,7 @@
 # scw-easy-container-redeploy
 Simple action using the Scaleway api to redeploy a container by providing the container name.
 
-## prerequisites
+## Prerequisites
 You will need a scaleway account and a token to use this action. You can find more information about how to create a token [here](https://www.scaleway.com/en/docs/generate-api-token/).
 
 ## Usage
