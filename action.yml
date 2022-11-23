@@ -35,10 +35,3 @@ inputs:
 runs:
   using: docker
   image: 'Dockerfile' 
-  with:
-    api_version: version
-    region: region
-    container_name: container_name
-    api_secret_key: api_secret_key
-    organization_id: organization_id
-    project_id: project_id
