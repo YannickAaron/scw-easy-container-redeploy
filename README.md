@@ -9,10 +9,47 @@ Please make sure to use the latest version of this action. You can find the late
 
 ```yml
       - name: redeploy scw - container
-        uses: YannickAaron/scw-easy-container-redeploy@0.1
+        uses: YannickAaron/scw-easy-container-redeploy@0.22
         with:
           api_secret_key: ${{ secrets.SCALEWAY_API_SECRET_KEY }}
           container_name: 'my-container'
+```
+
+**Full Example:**
+
+The following example shows how this action can be used to automatically build a container, push it to the registry and redeploy it on the server, all using [scaleway](https://www.scaleway.com/) with github actions.
+
+```yml
+name: deploy
+
+# Controls when the workflow will run
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: login to scaleway docker registry
+      uses: docker/login-action@v1
+      with:
+        registry: ${{ secrets.CONTAINER_REG_ENDPOINT}}
+        username: nologin
+        password: ${{ secrets.SCW_SECRET_KEY }}
+    - name: build docker container
+      run: docker build . -t ${{ secrets.CONTAINER_REG_ENDPOINT}}/<your-container-name>
+    - name: push docker container
+      run: docker push ${{ secrets.CONTAINER_REG_ENDPOINT}}/<your-container-name>
+    - name: redeploy scw - container
+      uses: YannickAaron/scw-easy-container-redeploy@0.22
+      with:
+        api_secret_key: ${{ secrets.SCW_SECRET_KEY }}
+        container_name: '<your-container-name>'
 ```
 
 ## Inputs
